@@ -10,9 +10,9 @@ Students spend a huge amount of time doing something that isn't actually studyin
 
 This isn't a notes app or a generic "chat with your PDF" clone — it's a single-purpose tool built around one real, specific workflow: *notes in → drillable study material out*, in three interchangeable formats.
 
-## b. Live URL
+## b. Live App
 
-🔗 **[https://recall.vercel.app](https://recall-xi-amber.vercel.app/))** 
+🔗 **[https://recall.vercel.app](https://recall-xi-amber.vercel.app/)** 
 
 ## c. Features
 
