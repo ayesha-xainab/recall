@@ -445,7 +445,13 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes, mode: currentMode, count })
       });
-      const data = await res.json();
+      const raw = await res.text();
+      let data = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch (parseErr) {
+        data = { error: raw || 'The server returned an unexpected response.' };
+      }
 
       if(!res.ok){
         showError(data.error || 'Something went wrong. Please try again.');
