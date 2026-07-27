@@ -88,7 +88,13 @@ Return JSON for mode = "${mode}" only.`;
       console.error("Gemini API error:", response.status, errText);
       return res
         .status(502)
-        .json({ error: "The AI service returned an error. Please try again." });
+        .json({
+          error: "The AI service returned an error. Please try again.",
+          details: {
+            status: response.status,
+            message: errText,
+          },
+        });
     }
 
     const data = await response.json();
