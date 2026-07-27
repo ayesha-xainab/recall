@@ -406,7 +406,18 @@
   function hideError(){
     errorBox.style.display = 'none';
   }
-
+  
+  function formatApiError(data){
+    if(!data) return 'Something went wrong. Please try again.';
+    if(data.details && (data.details.status || data.details.message)){
+      const parts = [];
+      if(data.details.status) parts.push(`status ${data.details.status}`);
+      if(data.details.message) parts.push(data.details.message);
+      return `${data.error || 'Something went wrong.'}${parts.length ? ` (${parts.join(': ')})` : ''}`;
+    }
+    return data.error || 'Something went wrong. Please try again.';
+  }
+  
   const loadingMessages = {
     flashcards: 'Turning notes into flashcards…',
     quiz: 'Writing quiz questions…',
