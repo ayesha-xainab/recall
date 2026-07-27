@@ -1,7 +1,7 @@
 // /api/generate.js
 // Vercel Serverless Function (Node.js runtime)
-// Calls the Google Gemini API (free tier) to turn raw study notes into
-// flashcards, a quiz, or a summary.
+// Calls the Groq API (free tier, OpenAI-compatible) to turn raw study notes
+// into flashcards, a quiz, or a summary.
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -23,18 +23,14 @@ export default async function handler(req, res) {
 
   const itemCount = Math.min(Math.max(parseInt(count, 10) || 8, 3), 20);
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return res.status(500).json({
       error:
-        "Server is missing GEMINI_API_KEY. Set it as an environment variable in your hosting dashboard.",
+        "Server is missing GROQ_API_KEY. Set it as an environment variable in your hosting dashboard.",
     });
   }
 
-  // ---- The AI feature's instructions (system prompt) ----
-  // This is the core of Recall's AI feature: it forces the model to act as a
-  // study-material generator and to ALWAYS return strict, parseable JSON so the
-  // frontend can render flashcards / quiz questions / a summary reliably.
   const systemPrompt = `You are Recall, an expert study assistant used inside a web app.
 Your ONLY job is to read a student's raw notes and convert them into study material.
 
@@ -58,56 +54,43 @@ mode = "summary":
 { "summary": { "title": "short topic title", "bullets": ["key point 1", "key point 2", ...] } }
 (6-12 bullets, each one concise sentence)
 
-Return JSON for mode = "${mode}" only.`;
+Return JSON for mode = "${mode}" only. Respond with a single JSON object, nothing else.`;
 
   const userMessage = `Notes:\n"""\n${notes.trim()}\n"""\n\nGenerate the "${mode}" JSON as instructed, with about ${itemCount} items.`;
 
   try {
-    // Check https://ai.google.dev/gemini-api/docs/models for the current
-    // recommended free-tier flash model name if this one is ever retired.
-    const model = "gemini-2.0-flash";
+    const model = "llama-3.3-70b-versatile";
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ role: "user", parts: [{ text: userMessage }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            maxOutputTokens: 2048,
-            temperature: 0.7,
-          },
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+          max_tokens: 2048,
         }),
       }
     );
 
     if (!response.ok) {
       const errText = await response.text();
-      let errMessage = errText;
-      try {
-        const errJson = JSON.parse(errText);
-        errMessage = errJson?.error?.message || errJson?.message || errText;
-      } catch (parseErr) {
-        // Keep the raw response text if Gemini did not return JSON.
-      }
-      console.error("Gemini API error:", response.status, errText);
+      console.error("Groq API error:", response.status, errText);
       return res
         .status(502)
-        .json({
-          error: "The AI service returned an error. Please try again.",
-          details: {
-            status: response.status,
-            message: errText,
-          },
-        });
+        .json({ error: "The AI service returned an error. Please try again." });
     }
 
     const data = await response.json();
-    const raw =
-      data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") ||
-      "";
+    const raw = data?.choices?.[0]?.message?.content || "";
 
     let parsed;
     try {
@@ -126,4 +109,3 @@ Return JSON for mode = "${mode}" only.`;
     return res.status(500).json({ error: "Unexpected server error." });
   }
 }
-
