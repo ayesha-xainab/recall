@@ -6,9 +6,9 @@
 
 Students spend a huge amount of time doing something that isn't actually studying: reformatting their own notes into flashcards or quiz questions before an exam. Recall removes that step entirely. Paste in raw, messy lecture notes or a textbook excerpt, pick a format, and get back study-ready material instantly.
 
-**Who it's for:** students (school, university, or self-taught learners) who have notes but no time to turn them into something they can actually drill themselves on — especially useful the night before an exam.
+**Who it's for:** students (school, university, or self-taught learners) who have notes but no time to turn them into something they can actually drill themselves on (especially useful the night before an exam).
 
-This isn't a notes app or a generic "chat with your PDF" clone — it's a single-purpose tool built around one real, specific workflow: *notes in → drillable study material out*, in three interchangeable formats.
+This isn't a notes app or a generic "chat with your PDF" clone; it's a single-purpose tool built around one real, specific workflow: *notes in → drillable study material out*, in three interchangeable formats.
 
 ## b. Live App
 
@@ -72,7 +72,7 @@ The user's notes and chosen mode/count are sent as the human turn; the response 
 
 ## e. Tools, services, and AI models used
 
-- **Frontend:** Plain HTML, CSS, and vanilla JavaScript (no framework needed — keeps it lightweight and fast).
+- **Frontend:** Plain HTML, CSS, and vanilla JavaScript 
 - **Backend:** A single Vercel Serverless Function (`api/generate.js`, Node.js runtime).
 - **AI model:** Groq (llama-3.3-70b-versatile), via Groq's OpenAI-compatible Chat Completions API
 - **Hosting/deployment:** Vercel (free tier).
