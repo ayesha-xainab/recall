@@ -1,0 +1,13 @@
+{
+  "name": "recall",
+  "version": "1.0.0",
+  "description": "Recall — turn your study notes into flashcards, a quiz, or a summary using AI.",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
+

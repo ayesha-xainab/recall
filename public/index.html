@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Recall — turn your notes into study material</title>
+<meta name="description" content="Paste your notes. Get flashcards, a quiz, or a summary in seconds." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pine:#1F2E28;
+    --pine-deep:#162019;
+    --paper:#FBF7EE;
+    --paper-line:#E4DCC8;
+    --ink:#26251F;
+    --chalk:#F2EFE6;
+    --gold:#E3B23C;
+    --gold-deep:#B9872A;
+    --red-rule:#C1544A;
+    --green-ok:#4C8B6B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--pine);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(227,178,60,0.08), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(76,139,107,0.10), transparent 55%);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--gold); color:var(--pine-deep); }
+
+  header.top{
+    padding:2.5rem 1.5rem 1.25rem;
+    text-align:center;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:0.6rem;
+  }
+  h1.brand{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(2.2rem,5vw,3.2rem);
+    margin:0 0 0.5rem;
+    letter-spacing:-0.01em;
+  }
+  header.top p{
+    color:#C9CFC7;
+    max-width:520px;
+    margin:0 auto;
+    font-size:1rem;
+    line-height:1.5;
+  }
+
+  main{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 1.25rem 4rem;
+  }
+
+  .desk{
+    background:var(--pine-deep);
+    border:1px solid rgba(227,178,60,0.18);
+    border-radius:18px;
+    padding:1.75rem;
+    box-shadow:0 30px 60px -30px rgba(0,0,0,0.6);
+  }
+
+  label.field-label{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:0.5rem;
+  }
+
+  textarea#notes{
+    width:100%;
+    min-height:200px;
+    resize:vertical;
+    background:var(--paper);
+    color:var(--ink);
+    border:none;
+    border-radius:10px;
+    padding:1rem 1.1rem;
+    font-family:'Inter',sans-serif;
+    font-size:0.98rem;
+    line-height:1.65;
+    background-image:repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 27px,
+      var(--paper-line) 28px
+    );
+    box-shadow:inset 4px 0 0 var(--red-rule);
+    outline:none;
+  }
+  textarea#notes:focus{ box-shadow:inset 4px 0 0 var(--red-rule), 0 0 0 3px rgba(227,178,60,0.45); }
+  textarea#notes::placeholder{ color:#8b8672; }
+
+  .controls-row{
+    display:flex;
+    gap:1.25rem;
+    margin-top:1.5rem;
+    flex-wrap:wrap;
+    align-items:flex-end;
+  }
+  .mode-group{ display:flex; gap:0.5rem; flex-wrap:wrap; }
+  .mode-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.78rem;
+    letter-spacing:0.03em;
+    padding:0.55rem 0.95rem;
+    border-radius:999px;
+    border:1px solid rgba(242,239,230,0.25);
+    background:transparent;
+    color:var(--chalk);
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .mode-btn:hover{ border-color:var(--gold); }
+  .mode-btn.active{
+    background:var(--gold);
+    color:var(--pine-deep);
+    border-color:var(--gold);
+    font-weight:600;
+  }
+
+  .count-field{ display:flex; align-items:center; gap:0.5rem; }
+  .count-field input{
+    width:56px;
+    background:var(--paper);
+    color:var(--ink);
+    border:none;
+    border-radius:8px;
+    padding:0.5rem 0.4rem;
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.9rem;
+  }
+
+  .generate-btn{
+    margin-left:auto;
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:1.02rem;
+    padding:0.75rem 1.6rem;
+    border-radius:10px;
+    border:none;
+    background:var(--gold);
+    color:var(--pine-deep);
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+    box-shadow:0 8px 20px -8px rgba(227,178,60,0.6);
+  }
+  .generate-btn:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 12px 24px -8px rgba(227,178,60,0.75); }
+  .generate-btn:disabled{ opacity:0.6; cursor:progress; }
+
+  #error-box{
+    display:none;
+    margin-top:1rem;
+    background:rgba(193,84,74,0.15);
+    border:1px solid var(--red-rule);
+    color:#F3C9C5;
+    padding:0.85rem 1rem;
+    border-radius:10px;
+    font-size:0.9rem;
+  }
+
+  #results{ margin-top:2.5rem; }
+  .results-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:0.75rem;
+    margin-bottom:1.25rem;
+  }
+  .results-title{ font-family:'Fraunces',serif; font-size:1.4rem; font-weight:600; }
+  .ghost-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.75rem;
+    background:transparent;
+    border:1px solid rgba(242,239,230,0.3);
+    color:var(--chalk);
+    padding:0.45rem 0.85rem;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .ghost-btn:hover{ border-color:var(--gold); color:var(--gold); }
+
+  /* Flashcards */
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:1rem;
+  }
+  .flip-card{
+    perspective:1200px;
+    height:170px;
+    cursor:pointer;
+  }
+  .flip-inner{
+    position:relative;
+    width:100%; height:100%;
+    transition:transform .5s cubic-bezier(.4,.2,.2,1);
+    transform-style:preserve-3d;
+  }
+  .flip-card.flipped .flip-inner{ transform:rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    border-radius:10px;
+    padding:1.1rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:0.95rem;
+    line-height:1.45;
+    box-shadow:0 10px 20px -10px rgba(0,0,0,0.5);
+  }
+  .flip-front{
+    background:var(--paper);
+    color:var(--ink);
+    box-shadow:inset 4px 0 0 var(--red-rule), 0 10px 20px -10px rgba(0,0,0,0.5);
+    font-weight:600;
+  }
+  .flip-back{
+    background:var(--green-ok);
+    color:#F6FFF9;
+    transform:rotateY(180deg);
+  }
+  .card-index{
+    position:absolute;
+    top:8px; left:12px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.68rem;
+    opacity:0.5;
+  }
+
+  /* Quiz */
+  .quiz-q{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:10px;
+    padding:1.25rem 1.4rem;
+    margin-bottom:1rem;
+    box-shadow:inset 4px 0 0 var(--red-rule);
+  }
+  .quiz-q h3{ margin:0 0 0.85rem; font-family:'Fraunces',serif; font-size:1.05rem; font-weight:600; }
+  .quiz-opt{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:#fff;
+    border:1.5px solid #E4DCC8;
+    border-radius:8px;
+    padding:0.6rem 0.85rem;
+    margin-bottom:0.5rem;
+    font-family:'Inter',sans-serif;
+    font-size:0.92rem;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .quiz-opt:hover{ border-color:var(--gold-deep); }
+  .quiz-opt.correct{ background:#E5F3EA; border-color:var(--green-ok); font-weight:600; }
+  .quiz-opt.wrong{ background:#FBE7E5; border-color:var(--red-rule); }
+  .quiz-opt:disabled{ cursor:default; }
+  .quiz-explain{
+    margin-top:0.6rem;
+    font-size:0.85rem;
+    color:#4B4A40;
+    font-style:italic;
+  }
+  .quiz-score{
+    font-family:'Fraunces',serif;
+    font-size:1.15rem;
+    text-align:center;
+    padding:1rem;
+    background:var(--pine-deep);
+    border:1px solid var(--gold);
+    border-radius:10px;
+    margin-top:1rem;
+  }
+
+  /* Summary */
+  .summary-card{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:10px;
+    padding:1.5rem 1.75rem;
+    box-shadow:inset 4px 0 0 var(--red-rule);
+  }
+  .summary-card h3{ font-family:'Fraunces',serif; margin-top:0; }
+  .summary-card ul{ padding-left:1.2rem; line-height:1.7; }
+
+  #loading{
+    display:none;
+    text-align:center;
+    padding:2.5rem 0;
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--gold);
+    font-size:0.85rem;
+    letter-spacing:0.05em;
+  }
+  .spinner{
+    width:26px;height:26px;
+    border:3px solid rgba(227,178,60,0.25);
+    border-top-color:var(--gold);
+    border-radius:50%;
+    margin:0 auto 0.75rem;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  footer{
+    text-align:center;
+    padding:2rem 1rem 3rem;
+    color:#8C9289;
+    font-size:0.8rem;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  footer a{ color:var(--gold); }
+
+  @media (max-width:600px){
+    .controls-row{ flex-direction:column; align-items:stretch; }
+    .generate-btn{ margin-left:0; width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="eyebrow">Study desk</div>
+  <h1 class="brand">Recall</h1>
+  <p>Paste any lecture notes, textbook excerpt, or messy summary. Get flashcards, a quiz, or a clean summary — generated by AI in seconds.</p>
+</header>
+
+<main>
+  <div class="desk">
+    <label class="field-label" for="notes">Your notes</label>
+    <textarea id="notes" placeholder="Paste your notes here — the messier the better. Recall will find the important parts..."></textarea>
+    <div class="controls-row">
+      <div>
+        <label class="field-label">Generate</label>
+        <div class="mode-group">
+          <button class="mode-btn active" data-mode="flashcards">Flashcards</button>
+          <button class="mode-btn" data-mode="quiz">Quiz</button>
+          <button class="mode-btn" data-mode="summary">Summary</button>
+        </div>
+      </div>
+      <div class="count-field">
+        <label class="field-label" style="margin-bottom:0;">Items</label>
+        <input type="number" id="count" value="8" min="3" max="20" />
+      </div>
+      <button class="generate-btn" id="go-btn">Generate →</button>
+    </div>
+
+    <div id="error-box"></div>
+
+    <div id="loading">
+      <div class="spinner"></div>
+      <span id="loading-text">Reading your notes…</span>
+    </div>
+  </div>
+
+  <div id="results"></div>
+</main>
+
+<script>
+  const notesEl = document.getElementById('notes');
+  const countEl = document.getElementById('count');
+  const goBtn = document.getElementById('go-btn');
+  const errorBox = document.getElementById('error-box');
+  const loading = document.getElementById('loading');
+  const loadingText = document.getElementById('loading-text');
+  const resultsEl = document.getElementById('results');
+  const modeBtns = document.querySelectorAll('.mode-btn');
+
+  let currentMode = 'flashcards';
+  const HISTORY_KEY = 'recall_history';
+
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentMode = btn.dataset.mode;
+    });
+  });
+
+  function showError(msg){
+    errorBox.textContent = msg;
+    errorBox.style.display = 'block';
+  }
+  function hideError(){
+    errorBox.style.display = 'none';
+  }
+
+  const loadingMessages = {
+    flashcards: 'Turning notes into flashcards…',
+    quiz: 'Writing quiz questions…',
+    summary: 'Summarizing the key points…'
+  };
+
+  goBtn.addEventListener('click', async () => {
+    hideError();
+    const notes = notesEl.value.trim();
+    const count = countEl.value;
+
+    if(notes.length < 20){
+      showError('Paste a bit more — at least a few sentences of notes.');
+      return;
+    }
+
+    goBtn.disabled = true;
+    loading.style.display = 'block';
+    loadingText.textContent = loadingMessages[currentMode];
+    resultsEl.innerHTML = '';
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes, mode: currentMode, count })
+      });
+      const data = await res.json();
+
+      if(!res.ok){
+        showError(data.error || 'Something went wrong. Please try again.');
+        return;
+      }
+
+      renderResult(currentMode, data, notes);
+      saveToHistory(currentMode, data, notes);
+    } catch (err) {
+      showError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      goBtn.disabled = false;
+      loading.style.display = 'none';
+    }
+  });
+
+  function renderResult(mode, data, notesSnippet){
+    if(mode === 'flashcards') renderFlashcards(data.flashcards || []);
+    else if(mode === 'quiz') renderQuiz(data.quiz || []);
+    else if(mode === 'summary') renderSummary(data.summary || {});
+  }
+
+  function renderFlashcards(cards){
+    if(!cards.length){
+      resultsEl.innerHTML = '<p style="color:#C9CFC7;">No flashcards were generated. Try adding more detail to your notes.</p>';
+      return;
+    }
+    let html = '<div class="results-header"><div class="results-title">Flashcards</div>' +
+      '<button class="ghost-btn" onclick="downloadText()">Download .txt</button></div>' +
+      '<p style="color:#C9CFC7;font-size:0.85rem;margin-top:-0.5rem;">Tap a card to flip it.</p>' +
+      '<div class="card-grid">';
+    cards.forEach((c, i) => {
+      html += `
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><span class="card-index">#${i+1}</span>${escapeHtml(c.front)}</div>
+            <div class="flip-face flip-back">${escapeHtml(c.back)}</div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+    resultsEl.innerHTML = html;
+    window.__lastData = { mode:'flashcards', cards };
+  }
+
+  function renderQuiz(questions){
+    if(!questions.length){
+      resultsEl.innerHTML = '<p style="color:#C9CFC7;">No quiz questions were generated. Try adding more detail to your notes.</p>';
+      return;
+    }
+    let html = '<div class="results-header"><div class="results-title">Quiz</div>' +
+      '<button class="ghost-btn" onclick="downloadText()">Download .txt</button></div>';
+    questions.forEach((q, qi) => {
+      html += `<div class="quiz-q" data-qi="${qi}">
+        <h3>${qi+1}. ${escapeHtml(q.question)}</h3>`;
+      q.options.forEach((opt, oi) => {
+        html += `<button class="quiz-opt" onclick="answerQuiz(${qi}, ${oi})">${escapeHtml(opt)}</button>`;
+      });
+      html += `<div class="quiz-explain" id="explain-${qi}" style="display:none;"></div></div>`;
+    });
+    html += `<div class="quiz-score" id="quiz-score" style="display:none;"></div>`;
+    resultsEl.innerHTML = html;
+    window.__quizData = questions;
+    window.__quizAnswered = new Array(questions.length).fill(false);
+    window.__quizScore = 0;
+    window.__lastData = { mode:'quiz', questions };
+  }
+
+  window.answerQuiz = function(qi, oi){
+    if(window.__quizAnswered[qi]) return;
+    window.__quizAnswered[qi] = true;
+    const q = window.__quizData[qi];
+    const container = document.querySelector(`.quiz-q[data-qi="${qi}"]`);
+    const opts = container.querySelectorAll('.quiz-opt');
+    opts.forEach((btn, i) => {
+      btn.disabled = true;
+      if(i === q.correctIndex) btn.classList.add('correct');
+      else if(i === oi) btn.classList.add('wrong');
+    });
+    if(oi === q.correctIndex) window.__quizScore++;
+    const explainEl = document.getElementById(`explain-${qi}`);
+    if(q.explanation){
+      explainEl.textContent = q.explanation;
+      explainEl.style.display = 'block';
+    }
+    if(window.__quizAnswered.every(Boolean)){
+      const scoreEl = document.getElementById('quiz-score');
+      scoreEl.style.display = 'block';
+      scoreEl.textContent = `Score: ${window.__quizScore} / ${window.__quizData.length}`;
+    }
+  };
+
+  function renderSummary(summary){
+    if(!summary.bullets || !summary.bullets.length){
+      resultsEl.innerHTML = '<p style="color:#C9CFC7;">No summary was generated. Try adding more detail to your notes.</p>';
+      return;
+    }
+    let html = '<div class="results-header"><div class="results-title">Summary</div>' +
+      '<button class="ghost-btn" onclick="downloadText()">Download .txt</button></div>' +
+      `<div class="summary-card"><h3>${escapeHtml(summary.title || 'Summary')}</h3><ul>`;
+    summary.bullets.forEach(b => { html += `<li>${escapeHtml(b)}</li>`; });
+    html += '</ul></div>';
+    resultsEl.innerHTML = html;
+    window.__lastData = { mode:'summary', summary };
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+  }
+
+  window.downloadText = function(){
+    const d = window.__lastData;
+    if(!d) return;
+    let text = '';
+    if(d.mode === 'flashcards'){
+      text = 'Recall Flashcards\n\n' + d.cards.map((c,i)=>`${i+1}. Q: ${c.front}\n   A: ${c.back}`).join('\n\n');
+    } else if(d.mode === 'quiz'){
+      text = 'Recall Quiz\n\n' + d.questions.map((q,i)=>`${i+1}. ${q.question}\n` + q.options.map((o,oi)=>`   ${String.fromCharCode(65+oi)}. ${o}${oi===q.correctIndex ? '  (correct)' : ''}`).join('\n')).join('\n\n');
+    } else if(d.mode === 'summary'){
+      text = `Recall Summary: ${d.summary.title}\n\n` + d.summary.bullets.map(b=>`- ${b}`).join('\n');
+    }
+    const blob = new Blob([text], { type:'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `recall-${d.mode}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  function saveToHistory(mode, data, notesSnippet){
+    try{
+      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      history.unshift({
+        mode, data,
+        snippet: notesSnippet.slice(0,80),
+        time: new Date().toISOString()
+      });
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0,10)));
+    } catch(e){ /* localStorage unavailable, ignore */ }
+  }
+</script>
+</body>
+</html>
+
