@@ -410,10 +410,10 @@
   function formatApiError(data){
     if(!data) return 'Something went wrong. Please try again.';
     if(data.details && (data.details.status || data.details.message)){
-      const parts = [];
-      if(data.details.status) parts.push(`status ${data.details.status}`);
-      if(data.details.message) parts.push(data.details.message);
-      return `${data.error || 'Something went wrong.'}${parts.length ? ` (${parts.join(': ')})` : ''}`;
+      const lines = [data.error || 'Something went wrong.'];
+      if(data.details.status) lines.push(`Status: ${data.details.status}`);
+      if(data.details.message) lines.push(`Message: ${data.details.message}`);
+      return lines.join(' ');
     }
     return data.error || 'Something went wrong. Please try again.';
   }
