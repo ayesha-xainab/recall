@@ -85,6 +85,13 @@ Return JSON for mode = "${mode}" only.`;
 
     if (!response.ok) {
       const errText = await response.text();
+      let errMessage = errText;
+      try {
+        const errJson = JSON.parse(errText);
+        errMessage = errJson?.error?.message || errJson?.message || errText;
+      } catch (parseErr) {
+        // Keep the raw response text if Gemini did not return JSON.
+      }
       console.error("Gemini API error:", response.status, errText);
       return res
         .status(502)
